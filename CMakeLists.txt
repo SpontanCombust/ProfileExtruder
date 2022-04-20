@@ -28,6 +28,8 @@ target_include_directories(ProfileExtruder PUBLIC
 target_sources(ProfileExtruder PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/include/bezier_curve.hpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/bezier_curve.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/curve_mesh.hpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/curve_mesh.cpp
 )
 target_link_libraries(ProfileExtruder PRIVATE
     glm
