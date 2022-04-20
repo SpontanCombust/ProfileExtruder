@@ -38,7 +38,7 @@ static const std::vector<int>& expandPascalTriangle(unsigned int degree)
 }
 
 
-std::vector<glm::vec3> plotBezierCurve(const std::vector<SBezierCurvePoint>& points, unsigned int segmentCount)
+std::vector<glm::vec3> plotBezierCurve(const std::vector<BezierCurvePoint>& points, unsigned int segmentCount)
 {
     std::vector<glm::vec3> result;
 
