@@ -12,12 +12,23 @@ FetchContent_Declare(
     glm
     GIT_REPOSITORY https://github.com/g-truc/glm
 )
+FetchContent_Declare(
+    SDL2
+    GIT_REPOSITORY https://github.com/libsdl-org/SDL
+    GIT_TAG main
+)
 
-FetchContent_MakeAvailable(FetchContentOffline glm)
+FetchContent_MakeAvailable(FetchContentOffline glm SDL2)
 
 set(FETCHCONTENT_UPDATES_DISCONNECTED_FETCHCONTENTOFFLINE ON)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${fetchcontentoffline_SOURCE_DIR}")
 include(fetchcontent-offline)
+
+if(UNIX)
+    set(OpenGL_GL_PREFERENCE GLVND)
+endif()
+find_package(OpenGL REQUIRED)
+find_package(GLEW REQUIRED)
 
 
 # ============================ LIBRARY ============================
@@ -39,7 +50,16 @@ target_link_libraries(ProfileExtruder PRIVATE
 add_executable(ProfileExtruderDemo)
 target_sources(ProfileExtruderDemo PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/demo/main.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/demo/shader_program.hpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/demo/shader_program.cpp
+)
+target_include_directories(${PROJECT_NAME} PRIVATE 
+    ${OPENGL_INCLUDE_DIR}
+    ${GLEW_INCLUDE_DIRS}
 )
 target_link_libraries(ProfileExtruderDemo PRIVATE
     ProfileExtruder
+    SDL2
+    ${OPENGL_LIBRARIES}
+    ${GLEW_LIBRARIES}
 )
