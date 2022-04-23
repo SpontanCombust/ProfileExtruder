@@ -50,8 +50,8 @@ target_link_libraries(ProfileExtruder PRIVATE
 add_executable(ProfileExtruderDemo)
 target_sources(ProfileExtruderDemo PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/demo/main.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/demo/shader_program.hpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/demo/shader_program.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/demo/utils/shader_program.hpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/demo/utils/shader_program.cpp
 )
 target_include_directories(${PROJECT_NAME} PRIVATE 
     ${OPENGL_INCLUDE_DIR}
