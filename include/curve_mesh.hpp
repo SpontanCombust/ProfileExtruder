@@ -26,4 +26,4 @@ struct ExtrusionPoint
 CurveMesh extrudeProfile(std::vector<glm::vec2> profile, const std::vector<ExtrusionPoint>& extrusionPoints);
 
 // All elements besides the first and last in curvePoints are treated as control points
-CurveMesh extrudeProfileWithCurve(std::vector<glm::vec2> profile, const std::vector<BezierCurvePoint>& curvePoints, unsigned int segmentCount);
+CurveMesh extrudeProfileWithCurve(const std::vector<glm::vec2>& profile, const std::vector<BezierCurvePoint>& curvePoints, unsigned int segmentCount);

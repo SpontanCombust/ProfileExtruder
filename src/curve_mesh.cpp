@@ -19,6 +19,15 @@ CurveMesh extrudeProfile(std::vector<glm::vec2> profile, const std::vector<Extru
         return mesh;
     }
 
+    // so that indexing is easier and texture wrapping across a segment is possible
+    profile.push_back(profile[0]);
+    const int profileSize = profile.size();
+
+
+
+    // ============= VERTICES ============= //
+    // each vertex of the profile is being transformed for every extrusion point
+    // and added to the `vertices` vector
     for(const auto& ep : extrusionPoints)
     {
         glm::vec3 direction = glm::normalize(ep.direction);
@@ -36,10 +45,10 @@ CurveMesh extrudeProfile(std::vector<glm::vec2> profile, const std::vector<Extru
             directionRotationVec = glm::cross(INIT_PROFILE_FORWARD_VECTOR, direction);
         }
         
-        for(const auto& p : profile)
+        for (size_t j = 0; j < profileSize - 1; j++)
         {
             // initialize the vertex with profile coords
-            glm::vec3 vert = {p.x, 0.f, p.y};
+            glm::vec3 vert = {profile[j].x, 0.f, profile[j].y};
             
             // rotate the vertex by the angle the direction vector makes with base vector of the profile
             vert = glm::rotate(vert, directionAngleDelta, directionRotationVec);
@@ -50,50 +59,116 @@ CurveMesh extrudeProfile(std::vector<glm::vec2> profile, const std::vector<Extru
             
             mesh.vertices.push_back(vert);
         }
+        mesh.vertices.push_back( *(mesh.vertices.end() - (profileSize - 2)) ); // for that one repeated vertex
     }
 
-    for (size_t i = 0; i < extrusionPoints.size() - 1; i++)
+
+
+    // ============= UVS ============= //
+    for (size_t i = 0; i < extrusionPoints.size(); i++)
+    {
+        // a texture will be wrapped around a single segment and will repeat with every segment
+        for (size_t j = 0; j < profileSize; j++)
+        {
+            mesh.uvs.push_back(glm::vec2(
+                float(j) / float(profileSize - 1),
+                float(i)
+            ));
+        }
+    }
+
+
+
+    // ============= NORMALS ============= //
+    // calculate normal based on the faces of the next curve mesh segment
+    auto calcNormalAfter = [&](int i, int j) -> glm::vec3 {
+        glm::vec3 vThis = mesh.vertices[i * profileSize + j];
+
+        glm::vec3 vRight = mesh.vertices[i * profileSize + j + 1];
+        
+        glm::vec3 vUp = mesh.vertices[(i + 1) * profileSize + j];
+        
+        glm::vec3 vLeft;
+        if(j > 0) {
+            vLeft = mesh.vertices[i * profileSize + j - 1];
+        } else {
+            vLeft = mesh.vertices[(i + 1) * profileSize - 2];
+        }
+
+        glm::vec3 n1 = glm::cross(vRight - vThis, vUp - vThis);
+        glm::vec3 n2 = glm::cross(vUp - vThis, vLeft - vThis);
+
+        return glm::normalize(n1 + n2);
+    };
+
+    // calculate normal based on the faces of the previous curve mesh segment
+    auto calcNormalBefore = [&](int i, int j) -> glm::vec3 {
+        glm::vec3 vThis = mesh.vertices[i * profileSize + j];
+
+        glm::vec3 vLeft;
+        if(j > 0) {
+            vLeft = mesh.vertices[i * profileSize + j - 1];
+        } else {
+            vLeft = mesh.vertices[(i + 1) * profileSize - 2];
+        }
+
+        glm::vec3 vDown = mesh.vertices[(i - 1) * profileSize + j];
+
+        glm::vec3 vRight = mesh.vertices[i * profileSize + j + 1];
+
+        glm::vec3 n1 = glm::cross(vLeft - vThis, vDown - vThis);
+        glm::vec3 n2 = glm::cross(vDown - vThis, vRight - vThis);
+
+        return glm::normalize(n1 + n2);
+    };
+
+
+    for (size_t j = 0; j < profile.size(); j++)
+    {
+        mesh.normals.push_back(calcNormalAfter(0, j));
+    }
+    mesh.normals.push_back( *(mesh.normals.end() - (profileSize - 2)) ); // for that one repeated vertex
+
+    for (size_t i = 1; i < extrusionPoints.size() - 1; i++)
     {
         for (size_t j = 0; j < profile.size() - 1; j++)
         {
-            mesh.indices.push_back(i * profile.size() + j);
-            mesh.indices.push_back(i * profile.size() + (j + 1));
-            mesh.indices.push_back((i + 1) * profile.size() + (j + 1));
-
-            mesh.indices.push_back(i * profile.size() + j);
-            mesh.indices.push_back((i + 1) * profile.size() + (j + 1));
-            mesh.indices.push_back((i + 1) * profile.size() + j);
+            glm::vec3 nBefore = calcNormalBefore(i, j);
+            glm::vec3 nAfter = calcNormalAfter(i, j);
+            mesh.normals.push_back(glm::normalize(nBefore + nAfter));
         }
-
-        mesh.indices.push_back(i * profile.size() + profile.size() - 1);
-        mesh.indices.push_back(i * profile.size() + 0);
-        mesh.indices.push_back((i + 1) * profile.size() + 0);
-
-        mesh.indices.push_back(i * profile.size() + profile.size() - 1);
-        mesh.indices.push_back((i + 1) * profile.size() + 0);
-        mesh.indices.push_back((i + 1) * profile.size() + profile.size() - 1);
+        mesh.normals.push_back( *(mesh.normals.end() - (profileSize - 2)) );
     }
 
-    for (size_t i = 0; i < extrusionPoints.size(); i++)
+    for (size_t j = 0; j < profile.size(); j++)
     {
-        for (size_t j = 0; j < profile.size(); j++)
+        mesh.normals.push_back(calcNormalBefore(extrusionPoints.size() - 1, j));
+    }
+    mesh.normals.push_back( *(mesh.normals.end() - (profileSize - 2)) );
+
+
+    // ============= INDICES ============= //
+    for (size_t i = 0; i < extrusionPoints.size() - 1; i++)
+    {
+        for (size_t j = 0; j < profileSize - 1; j++)
         {
-            mesh.uvs.push_back(glm::vec2(0.f, 0.f));
-            mesh.uvs.push_back(glm::vec2(1.f, 0.f));
-            mesh.uvs.push_back(glm::vec2(1.f, 1.f));
-            
-            mesh.uvs.push_back(glm::vec2(0.f, 0.f));
-            mesh.uvs.push_back(glm::vec2(1.f, 1.f));
-            mesh.uvs.push_back(glm::vec2(0.f, 1.f));
+            mesh.indices.push_back(i * profileSize + j);
+            mesh.indices.push_back(i * profileSize + (j + 1));
+            mesh.indices.push_back((i + 1) * profileSize + (j + 1));
+
+            mesh.indices.push_back(i * profileSize + j);
+            mesh.indices.push_back((i + 1) * profileSize + (j + 1));
+            mesh.indices.push_back((i + 1) * profileSize + j);
         }
     }
 
-    
+
+
     return mesh;
 }
 
 // All elements besides the first and last in curvePoints are treated as control points
-CurveMesh extrudeProfileWithCurve(std::vector<glm::vec2> profile, const std::vector<BezierCurvePoint>& curvePoints, unsigned int segmentCount)
+CurveMesh extrudeProfileWithCurve(const std::vector<glm::vec2>& profile, const std::vector<BezierCurvePoint>& curvePoints, unsigned int segmentCount)
 {
     CurveMesh mesh{};
 
