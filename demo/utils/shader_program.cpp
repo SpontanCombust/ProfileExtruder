@@ -13,7 +13,7 @@ GLuint loadShaderProgramFromSource(const char *vertexShaderSource, const char *f
 	GLuint vertexShaderID = glCreateShader(GL_VERTEX_SHADER);
 	GLuint fragmentShaderID = glCreateShader(GL_FRAGMENT_SHADER);
 
-	GLint result = GL_FALSE;
+	GLint result = GL_TRUE;
 	int infoLogLength;
 
 	// Compile Vertex Shader
@@ -24,7 +24,7 @@ GLuint loadShaderProgramFromSource(const char *vertexShaderSource, const char *f
 	// Check Vertex Shader
 	glGetShaderiv(vertexShaderID, GL_COMPILE_STATUS, &result);
 	glGetShaderiv(vertexShaderID, GL_INFO_LOG_LENGTH, &infoLogLength);
-	if ( result == GL_TRUE && infoLogLength > 0 ){
+	if ( result == GL_FALSE && infoLogLength > 0 ){
 		std::vector<char> errMsg(infoLogLength+1);
 		glGetShaderInfoLog(vertexShaderID, infoLogLength, NULL, &errMsg[0]);
 		printf("%s\n", &errMsg[0]);
@@ -40,7 +40,7 @@ GLuint loadShaderProgramFromSource(const char *vertexShaderSource, const char *f
 	// Check Fragment Shader
 	glGetShaderiv(fragmentShaderID, GL_COMPILE_STATUS, &result);
 	glGetShaderiv(fragmentShaderID, GL_INFO_LOG_LENGTH, &infoLogLength);
-	if ( infoLogLength > 0 ){
+	if ( result == GL_FALSE && infoLogLength > 0 ){
 		std::vector<char> errMsg(infoLogLength+1);
 		glGetShaderInfoLog(fragmentShaderID, infoLogLength, NULL, &errMsg[0]);
 		printf("%s\n", &errMsg[0]);
@@ -58,7 +58,7 @@ GLuint loadShaderProgramFromSource(const char *vertexShaderSource, const char *f
 	// Check the program
 	glGetProgramiv(ProgramID, GL_LINK_STATUS, &result);
 	glGetProgramiv(ProgramID, GL_INFO_LOG_LENGTH, &infoLogLength);
-	if ( result == GL_TRUE && infoLogLength > 0 ){
+	if ( result == GL_FALSE && infoLogLength > 0 ){
 		std::vector<char> errMsg(infoLogLength+1);
 		glGetProgramInfoLog(ProgramID, infoLogLength, NULL, &errMsg[0]);
 		printf("%s\n", &errMsg[0]);
