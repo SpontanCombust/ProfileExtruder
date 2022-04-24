@@ -10,6 +10,9 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <bezier_curve.hpp>
 #include <curve_mesh.hpp>
+#include <imgui.h>
+#include <imgui_impl_sdl.h>
+#include <imgui_impl_opengl3.h>
 
 #include <vector>
 
@@ -55,6 +58,12 @@ int main(int argc, char const *argv[])
     );
 
     SDL_GLContext context = SDL_GL_CreateContext(window);
+
+    ImGui::CreateContext();
+    ImGui::StyleColorsDark();
+    ImGuiIO& io = ImGui::GetIO(); (void)io;
+    ImGui_ImplSDL2_InitForOpenGL(window, context);
+    ImGui_ImplOpenGL3_Init("#version 330");
 
 
 
@@ -145,10 +154,20 @@ int main(int argc, char const *argv[])
         {
             handleInput(e, running);
             camera.handleEvent(e, dt);
+            ImGui_ImplSDL2_ProcessEvent(&e);
         }
         camera.update();
         prevTick = currTick;
         
+
+        ImGui_ImplOpenGL3_NewFrame();
+        ImGui_ImplSDL2_NewFrame();
+        ImGui::NewFrame();
+
+        //TODO replace with light, mesh and curve controls
+        ImGui::ShowDemoWindow(); 
+        ImGui::Render();
+
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -168,10 +187,16 @@ int main(int argc, char const *argv[])
 
         mesh.draw();
 
+        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
         SDL_GL_SwapWindow(window);
-
     }
 
+    ImGui_ImplOpenGL3_Shutdown();
+    ImGui_ImplSDL2_Shutdown();
+    ImGui::DestroyContext();
+
+    SDL_GL_DeleteContext(context);
+    SDL_DestroyWindow(window);
     SDL_Quit();
 
     return 0;

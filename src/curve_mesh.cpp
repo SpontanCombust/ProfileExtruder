@@ -59,7 +59,7 @@ CurveMesh extrudeProfile(std::vector<glm::vec2> profile, const std::vector<Extru
             
             mesh.vertices.push_back(vert);
         }
-        mesh.vertices.push_back( *(mesh.vertices.end() - (profileSize - 2)) ); // for that one repeated vertex
+        mesh.vertices.push_back( *(mesh.vertices.end() - (profileSize - 1)) ); // for that one repeated vertex
     }
 
 
@@ -80,6 +80,7 @@ CurveMesh extrudeProfile(std::vector<glm::vec2> profile, const std::vector<Extru
 
 
     // ============= NORMALS ============= //
+    //FIXME: normals are not correct
     // calculate normal based on the faces of the next curve mesh segment
     auto calcNormalAfter = [&](int i, int j) -> glm::vec3 {
         glm::vec3 vThis = mesh.vertices[i * profileSize + j];
@@ -127,7 +128,7 @@ CurveMesh extrudeProfile(std::vector<glm::vec2> profile, const std::vector<Extru
     {
         mesh.normals.push_back(calcNormalAfter(0, j));
     }
-    mesh.normals.push_back( *(mesh.normals.end() - (profileSize - 2)) ); // for that one repeated vertex
+    mesh.normals.push_back( *(mesh.normals.end() - (profileSize - 1)) ); // for that one repeated vertex
 
     for (size_t i = 1; i < extrusionPoints.size() - 1; i++)
     {
@@ -137,14 +138,14 @@ CurveMesh extrudeProfile(std::vector<glm::vec2> profile, const std::vector<Extru
             glm::vec3 nAfter = calcNormalAfter(i, j);
             mesh.normals.push_back(glm::normalize(nBefore + nAfter));
         }
-        mesh.normals.push_back( *(mesh.normals.end() - (profileSize - 2)) );
+        mesh.normals.push_back( *(mesh.normals.end() - (profileSize - 1)) );
     }
 
     for (size_t j = 0; j < profile.size(); j++)
     {
         mesh.normals.push_back(calcNormalBefore(extrusionPoints.size() - 1, j));
     }
-    mesh.normals.push_back( *(mesh.normals.end() - (profileSize - 2)) );
+    mesh.normals.push_back( *(mesh.normals.end() - (profileSize - 1)) );
 
 
     // ============= INDICES ============= //

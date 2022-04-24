@@ -69,15 +69,10 @@ void Camera::handleEvent(SDL_Event& event, float deltaTime)
     }
     else if(event.type == SDL_MOUSEBUTTONDOWN)
     {
-        if(event.button.button == SDL_BUTTON_LEFT)
+        if(event.button.button == SDL_BUTTON_RIGHT)
         {
-            SDL_SetRelativeMouseMode(SDL_TRUE);
-            m_isRotationActive = true;
-        }
-        else if (event.button.button == SDL_BUTTON_RIGHT)
-        {
-            SDL_SetRelativeMouseMode(SDL_FALSE);
-            m_isRotationActive = false;
+            m_isRotationActive = !m_isRotationActive;
+            SDL_SetRelativeMouseMode(m_isRotationActive ? SDL_TRUE : SDL_FALSE);
         }
     }
 }

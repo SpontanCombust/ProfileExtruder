@@ -17,8 +17,12 @@ FetchContent_Declare(
     GIT_REPOSITORY https://github.com/libsdl-org/SDL
     GIT_TAG main
 )
+FetchContent_Declare(
+    imgui
+    GIT_REPOSITORY https://github.com/ocornut/imgui
+)
 
-FetchContent_MakeAvailable(FetchContentOffline glm SDL2)
+FetchContent_MakeAvailable(FetchContentOffline glm SDL2 imgui)
 
 set(FETCHCONTENT_UPDATES_DISCONNECTED_FETCHCONTENTOFFLINE ON)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${fetchcontentoffline_SOURCE_DIR}")
@@ -30,11 +34,34 @@ endif()
 find_package(OpenGL REQUIRED)
 find_package(GLEW REQUIRED)
 
+add_library(imgui)
+target_include_directories(imgui PUBLIC
+    "${imgui_SOURCE_DIR}"
+    "${imgui_SOURCE_DIR}/backends"
+)
+target_sources(imgui PRIVATE
+    "${imgui_SOURCE_DIR}/imconfig.h"
+    "${imgui_SOURCE_DIR}/imgui.h"
+    "${imgui_SOURCE_DIR}/imgui.cpp"
+    "${imgui_SOURCE_DIR}/imgui_demo.cpp"
+    "${imgui_SOURCE_DIR}/imgui_draw.cpp"
+    "${imgui_SOURCE_DIR}/imgui_internal.h"
+    "${imgui_SOURCE_DIR}/imgui_tables.cpp"
+    "${imgui_SOURCE_DIR}/imgui_widgets.cpp"
+    "${imgui_SOURCE_DIR}/backends/imgui_impl_sdl.h"
+    "${imgui_SOURCE_DIR}/backends/imgui_impl_sdl.cpp"
+    "${imgui_SOURCE_DIR}/backends/imgui_impl_opengl3.h"
+    "${imgui_SOURCE_DIR}/backends/imgui_impl_opengl3.cpp"
+)
+target_link_libraries(imgui PRIVATE 
+    SDL2
+    ${CMAKE_DL_LIBS}
+)
 
 # ============================ LIBRARY ============================
 add_library(ProfileExtruder)
 target_include_directories(ProfileExtruder PUBLIC 
-    ${CMAKE_CURRENT_SOURCE_DIR}/include
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/
 )
 target_sources(ProfileExtruder PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/include/bezier_curve.hpp
@@ -68,4 +95,5 @@ target_link_libraries(ProfileExtruderDemo PRIVATE
     SDL2
     ${OPENGL_LIBRARIES}
     ${GLEW_LIBRARIES}
+    imgui
 )
