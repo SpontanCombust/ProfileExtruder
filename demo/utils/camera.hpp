@@ -14,7 +14,9 @@ private:
     glm::vec3 m_right;
 
     glm::mat4 m_view;
-    glm::mat4 m_projection;    
+    glm::mat4 m_projection;
+
+    bool m_isRotationActive;
 
 
 public:

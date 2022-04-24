@@ -5,7 +5,7 @@
 
 #define CAMERA_UP glm::vec3(0.0f, 1.0f, 0.0f)
 #define CAMERA_FOV 60.f
-#define CAMERA_ASPECT_RATIO 4.0f / 3.0f
+#define CAMERA_ASPECT_RATIO 16.0f / 9.0f
 #define CAMERA_MOVE_SPEED 5.f
 #define CAMERA_ROTATE_SPEED 10.f
 
@@ -13,11 +13,14 @@
 Camera::Camera()
 {
     m_position = glm::vec3(0.0f);
-    m_yaw = 0.0f;
+    m_yaw = -90.0f;
     m_pitch = 0.0f;
 
     updateViewUsingRotation();
     m_projection = glm::perspective(glm::radians(CAMERA_FOV), CAMERA_ASPECT_RATIO, 0.1f, 100.0f);
+
+    m_isRotationActive = true;
+    SDL_SetRelativeMouseMode(SDL_TRUE);
 }
 
 Camera::~Camera()
@@ -58,10 +61,23 @@ void Camera::handleEvent(SDL_Event& event, float deltaTime)
             break;
         }
     }
-    else if(event.type == SDL_MOUSEMOTION)
+    else if(event.type == SDL_MOUSEMOTION && m_isRotationActive)
     {
         m_yaw += (float)event.motion.xrel * deltaTime * CAMERA_ROTATE_SPEED;
         m_pitch -= (float)event.motion.yrel * deltaTime * CAMERA_ROTATE_SPEED;
+    }
+    else if(event.type == SDL_MOUSEBUTTONDOWN)
+    {
+        if(event.button.button == SDL_BUTTON_LEFT)
+        {
+            SDL_SetRelativeMouseMode(SDL_TRUE);
+            m_isRotationActive = true;
+        }
+        else if (event.button.button == SDL_BUTTON_RIGHT)
+        {
+            SDL_SetRelativeMouseMode(SDL_FALSE);
+            m_isRotationActive = false;
+        }
     }
 }
 
