@@ -19,8 +19,7 @@ Camera::Camera()
     updateViewUsingRotation();
     m_projection = glm::perspective(glm::radians(CAMERA_FOV), CAMERA_ASPECT_RATIO, 0.1f, 100.0f);
 
-    m_isRotationActive = true;
-    SDL_SetRelativeMouseMode(SDL_TRUE);
+    m_isRotationActive = false;
 }
 
 Camera::~Camera()
@@ -65,6 +64,8 @@ void Camera::handleEvent(SDL_Event& event, float deltaTime)
     {
         m_yaw += (float)event.motion.xrel * deltaTime * CAMERA_ROTATE_SPEED;
         m_pitch -= (float)event.motion.yrel * deltaTime * CAMERA_ROTATE_SPEED;
+
+        m_pitch = glm::clamp(m_pitch, -89.f, 89.f);
     }
     else if(event.type == SDL_MOUSEBUTTONDOWN)
     {
