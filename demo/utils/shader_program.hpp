@@ -2,4 +2,5 @@
 
 #include <GL/glew.h>
 
-GLuint loadShaderProgram(const char *vertexFilePath, const char *fragmentFilePath);
+GLuint loadShaderProgramFromSource(const char *vertexShaderSource, const char *fragmentShaderSource);
+GLuint loadShaderProgramFromFiles(const char *vertexFilePath, const char *fragmentFilePath);
