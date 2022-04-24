@@ -6,7 +6,6 @@ static const char *vertexShaderSource = R"(
 // ======== INPUT ========
 in vec3 avPosition;
 in vec3 avNormal;
-in vec2 avUV;
 
 uniform mat4 uView;
 uniform mat4 uProjection;
@@ -16,7 +15,6 @@ uniform mat4 uProjection;
 out VS_OUT {
     vec3 position;
     vec3 normal;
-    vec2 uv;
 } vs_out;
 
 
@@ -25,7 +23,6 @@ void main()
 {
     vs_out.position = avPosition;
     vs_out.normal = avNormal;
-    vs_out.uv = avUV;
 
     gl_Position = uProjection * uView * vec4(avPosition, 1.0);
 }
@@ -37,8 +34,8 @@ static const char *fragmentShaderSource = R"(
 
 // ======== TYPES ========
 struct Material {
-    sampled2D diffuse;
-    float specular;
+    vec3 diffuse;
+    vec3 specular;
     float shininess;
 };
 
@@ -55,7 +52,6 @@ struct Light {
 in VS_OUT {
     vec3 position;
     vec3 normal;
-    vec2 uv;
 } fs_in;
 
 uniform vec3 uCameraPosition;
@@ -78,10 +74,9 @@ void main()
     vec3 reflectDirection = reflect(-lightDirection, fs_in.normal);
     float specularImpact = pow(max(dot(viewDirection, reflectDirection), 0.0), uMaterial.shininess);
 
-    vec3 texel = texture(uMaterial.diffuse, fs_in.uv).rgb;
-    vec3 ambient = light.ambient * texel;
-    vec3 diffuse = light.diffuse * diffuseImpact * texel;
-    vec3 specular = light.specular * specularImpact * texel;
+    vec3 ambient = uLight.ambient * uMaterial.diffuse;
+    vec3 diffuse = uLight.diffuse * diffuseImpact * uMaterial.diffuse;
+    vec3 specular = uLight.specular * specularImpact * uMaterial.specular;
 
     fs_out_color = vec4(ambient + diffuse + specular, 1.0);
 }
