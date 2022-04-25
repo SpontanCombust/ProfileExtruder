@@ -1,35 +1,3 @@
-#pragma once
-
-static const char *vertexShaderSource = R"(
-#version 330 core
-
-// ======== INPUT ========
-in vec3 avPosition;
-in vec3 avNormal;
-
-uniform mat4 uView;
-uniform mat4 uProjection;
-
-
-// ======== OUTPUT ========
-out VS_OUT {
-    vec3 position;
-    vec3 normal;
-} vs_out;
-
-
-// ======== MAIN ========
-void main()
-{
-    vs_out.position = avPosition;
-    vs_out.normal = avNormal;
-
-    gl_Position = uProjection * uView * vec4(avPosition, 1.0);
-}
-)";
-
-
-static const char *fragmentShaderSource = R"(
 #version 330 core
 
 // ======== TYPES ========
@@ -80,4 +48,3 @@ void main()
 
     fs_out_color = vec4(ambient + diffuse + specular, 1.0);
 }
-)";
