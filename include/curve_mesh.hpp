@@ -7,7 +7,7 @@
 #include <vector>
 
 
-struct CurveMesh
+struct CurveMeshData
 {
     std::vector<glm::vec3> vertices;
     std::vector<glm::vec3> normals;
@@ -23,7 +23,7 @@ struct ExtrusionPoint
     float roll;
 };
 
-CurveMesh extrudeProfile(std::vector<glm::vec2> profile, const std::vector<ExtrusionPoint>& extrusionPoints);
+CurveMeshData extrudeProfile(std::vector<glm::vec2> profile, const std::vector<ExtrusionPoint>& extrusionPoints);
 
 // All elements besides the first and last in curvePoints are treated as control points
-CurveMesh extrudeProfileWithCurve(const std::vector<glm::vec2>& profile, const std::vector<BezierCurvePoint>& curvePoints, unsigned int segmentCount);
+CurveMeshData extrudeProfileWithCurve(const std::vector<glm::vec2>& profile, const std::vector<BezierCurvePoint>& curvePoints, unsigned int segmentCount);

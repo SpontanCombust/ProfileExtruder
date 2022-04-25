@@ -9,9 +9,9 @@
 
 const glm::vec3 INIT_PROFILE_FORWARD_VECTOR = glm::vec3(0.f, 1.f, 0.f);
 
-CurveMesh extrudeProfile(std::vector<glm::vec2> profile, const std::vector<ExtrusionPoint>& extrusionPoints)
+CurveMeshData extrudeProfile(std::vector<glm::vec2> profile, const std::vector<ExtrusionPoint>& extrusionPoints)
 {
-    CurveMesh mesh{};
+    CurveMeshData mesh{};
 
     if(extrusionPoints.size() < 2)
     {
@@ -169,9 +169,9 @@ CurveMesh extrudeProfile(std::vector<glm::vec2> profile, const std::vector<Extru
 }
 
 // All elements besides the first and last in curvePoints are treated as control points
-CurveMesh extrudeProfileWithCurve(const std::vector<glm::vec2>& profile, const std::vector<BezierCurvePoint>& curvePoints, unsigned int segmentCount)
+CurveMeshData extrudeProfileWithCurve(const std::vector<glm::vec2>& profile, const std::vector<BezierCurvePoint>& curvePoints, unsigned int segmentCount)
 {
-    CurveMesh mesh{};
+    CurveMeshData mesh{};
 
     auto curve = plotBezierCurve(curvePoints, segmentCount);
 
