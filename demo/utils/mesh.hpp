@@ -18,6 +18,7 @@ private:
     size_t m_iboSize;
     size_t m_iboCapacity;
 
+public:
     glm::vec3 m_diffuse;
     glm::vec3 m_specular;
     float m_shininess;
@@ -32,10 +33,7 @@ public:
             //   const std::vector<glm::vec2>& uvs,
               const std::vector<unsigned int>& indices);
 
-    void setMaterial(const glm::vec3& diffuse, const glm::vec3& specular, float shininess);
-    const glm::vec3& getMaterialDiffuse() const;
-    const glm::vec3& getMaterialSpecular() const;
-    float getMaterialShininess() const;
+    void load(const char *objPath);
 
     void draw();
 };

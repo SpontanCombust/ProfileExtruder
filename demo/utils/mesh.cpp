@@ -1,5 +1,7 @@
 #include "mesh.hpp"
 
+#include "OBJ_Loader.h"
+
 Mesh::Mesh()
 {
     glCreateBuffers(1, &m_vboVertices);
@@ -78,26 +80,26 @@ void Mesh::load(const std::vector<glm::vec3>& vertices,
     }
 }
 
-void Mesh::setMaterial(const glm::vec3& diffuse, const glm::vec3& specular, float shininess)
+void Mesh::load(const char *objPath)
 {
-    m_diffuse = diffuse;
-    m_specular = specular;
-    m_shininess = shininess;
-}
+    objl::Loader loader;    
 
-const glm::vec3& Mesh::getMaterialDiffuse() const
-{
-    return m_diffuse;
-}
+    if(!loader.LoadFile(objPath))
+    {
+        printf("Failed to load mesh: %s\n", objPath);
+        return;
+    }
 
-const glm::vec3& Mesh::getMaterialSpecular() const
-{
-    return m_specular;
-}
+    std::vector<glm::vec3> vertices(loader.LoadedVertices.size());
+    std::vector<glm::vec3> normals(loader.LoadedVertices.size());
 
-float Mesh::getMaterialShininess() const
-{
-    return m_shininess;
+    for(unsigned int i = 0; i < loader.LoadedVertices.size(); i++)
+    {
+        vertices[i] = glm::vec3(loader.LoadedVertices[i].Position.X, loader.LoadedVertices[i].Position.Y, loader.LoadedVertices[i].Position.Z);
+        normals[i] = glm::vec3(loader.LoadedVertices[i].Normal.X, loader.LoadedVertices[i].Normal.Y, loader.LoadedVertices[i].Normal.Z);
+    }
+
+    load(vertices, normals, loader.LoadedIndices);
 }
 
 void Mesh::draw()

@@ -21,18 +21,26 @@ FetchContent_Declare(
     imgui
     GIT_REPOSITORY https://github.com/ocornut/imgui
 )
+FetchContent_Declare(
+    objloader
+    GIT_REPOSITORY https://github.com/Bly7/OBJ-Loader
+)
 
-FetchContent_MakeAvailable(FetchContentOffline glm SDL2 imgui)
+FetchContent_MakeAvailable(FetchContentOffline glm SDL2 imgui objloader)
 
 set(FETCHCONTENT_UPDATES_DISCONNECTED_FETCHCONTENTOFFLINE ON)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${fetchcontentoffline_SOURCE_DIR}")
 include(fetchcontent-offline)
+
+FetchContent_DisconnectedIfOffline()
+
 
 if(UNIX)
     set(OpenGL_GL_PREFERENCE GLVND)
 endif()
 find_package(OpenGL REQUIRED)
 find_package(GLEW REQUIRED)
+
 
 add_library(imgui)
 target_include_directories(imgui PUBLIC
@@ -56,6 +64,15 @@ target_sources(imgui PRIVATE
 target_link_libraries(imgui PRIVATE 
     SDL2
     ${CMAKE_DL_LIBS}
+)
+
+
+add_library(objloader INTERFACE)
+target_include_directories(objloader INTERFACE
+    "${objloader_SOURCE_DIR}/Source"
+)
+target_sources(objloader INTERFACE
+    "${objloader_SOURCE_DIR}/Source/OBJ_Loader.h"
 )
 
 # ============================ LIBRARY ============================
@@ -83,12 +100,12 @@ target_sources(ProfileExtruderDemo PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/demo/utils/mesh.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/demo/utils/shader_program.hpp
     ${CMAKE_CURRENT_SOURCE_DIR}/demo/utils/shader_program.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/demo/utils/shaders.hpp
     ${CMAKE_CURRENT_SOURCE_DIR}/demo/main.cpp
 )
 target_include_directories(${PROJECT_NAME} PRIVATE 
     ${OPENGL_INCLUDE_DIR}
     ${GLEW_INCLUDE_DIRS}
+    
 )
 target_link_libraries(ProfileExtruderDemo PRIVATE
     ProfileExtruder
@@ -96,4 +113,9 @@ target_link_libraries(ProfileExtruderDemo PRIVATE
     ${OPENGL_LIBRARIES}
     ${GLEW_LIBRARIES}
     imgui
+    objloader
+)
+set_target_properties(ProfileExtruderDemo PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY_DEBUG ${CMAKE_CURRENT_SOURCE_DIR}/demo/
+    RUNTIME_OUTPUT_DIRECTORY_RELEASE ${CMAKE_CURRENT_SOURCE_DIR}/demo/
 )
