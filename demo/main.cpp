@@ -1,5 +1,4 @@
 #include "utils/shader_program.hpp"
-#include "utils/shaders.hpp"
 #include "utils/camera.hpp"
 #include "utils/mesh.hpp"
 #include "utils/light.hpp"
@@ -36,6 +35,30 @@ void handleInput(SDL_Event &event, bool &running) {
                 break;
         }
     }
+}
+
+
+Light *light;
+Mesh *curveMesh;
+
+void scenePropertiesWindow()
+{
+    ImGui::Begin("Scene Properties");
+
+    ImGui::Text("Mesh material");
+    ImGui::ColorEdit3("Diffuse##mesh", (float *)glm::value_ptr(curveMesh->m_diffuse));
+    ImGui::ColorEdit3("Specular##mesh", (float *)glm::value_ptr(curveMesh->m_specular));
+    ImGui::SliderFloat("Shininess##mesh", &curveMesh->m_shininess, 0.0f, 128.0f);
+
+    ImGui::NewLine();
+
+    ImGui::Text("Light");
+    ImGui::SliderFloat3("Position##light", (float *)glm::value_ptr(light->position), -20.0f, 20.0f);
+    ImGui::ColorEdit3("Ambient##light", (float *)glm::value_ptr(light->ambient));
+    ImGui::ColorEdit3("Diffuse##light", (float *)glm::value_ptr(light->diffuse));
+    ImGui::ColorEdit3("Specular##light", (float *)glm::value_ptr(light->specular));
+
+    ImGui::End();
 }
 
 int main(int argc, char const *argv[])
@@ -86,9 +109,11 @@ int main(int argc, char const *argv[])
     SDL_GL_SetSwapInterval(1);
 
 
-    GLuint shader = loadShaderProgramFromSource(vertexShaderSource, fragmentShaderSource);
+    GLuint shader = loadShaderProgramFromFiles("data/shader.vs.glsl", "data/shader.fs.glsl");
     glUseProgram(shader);
 
+    GLint unifLocTranslation = glGetUniformLocation(shader, "uTranslation");
+    GLint unifLocScale = glGetUniformLocation(shader, "uScale");
     GLint unifLocView = glGetUniformLocation(shader, "uView");
     GLint unifLocProjection = glGetUniformLocation(shader, "uProjection");
 
@@ -103,8 +128,10 @@ int main(int argc, char const *argv[])
 
     
     Camera camera;
-    Light light;
-    Mesh mesh;
+    curveMesh = new Mesh();
+    light = new Light();
+    Mesh *lightSphere = new Mesh();
+    lightSphere->load("data/sphere.obj");
 
 
     std::vector<glm::vec2> profile {
@@ -127,18 +154,16 @@ int main(int argc, char const *argv[])
     camera.setPosition(glm::vec3(0.f, 3.5f, 10.f));
 
     // this will later reload every time change is made to the curve
-    CurveMesh curveMesh = extrudeProfileWithCurve(profile, curvePoints, segmentCount);
-    mesh.load(curveMesh.vertices, curveMesh.normals, curveMesh.indices);
-    mesh.setMaterial(
-        glm::vec3(0.1f, 0.5f, 1.0f),
-        glm::vec3(0.1f, 0.5f, 1.0f),
-        0.01f
-    );
+    CurveMeshData curveMeshData = extrudeProfileWithCurve(profile, curvePoints, segmentCount);
+    curveMesh->load(curveMeshData.vertices, curveMeshData.normals, curveMeshData.indices);
+    curveMesh->m_diffuse = {0.1f, 0.5, 1.0f};
+    curveMesh->m_specular = {0.1f, 0.5, 1.0f};
+    curveMesh->m_shininess = 0.01f;
 
-    light.position = glm::vec3(0.f, 10.f, 5.f);
-    light.ambient = glm::vec3(0.1f, 0.1f, 0.1f);
-    light.diffuse = glm::vec3(0.8f, 0.8f, 0.8f);
-    light.specular = glm::vec3(0.8f, 0.8f, 0.8f);
+    light->position = glm::vec3(0.f, 10.f, 5.f);
+    light->ambient = glm::vec3(0.1f, 0.1f, 0.1f);
+    light->diffuse = glm::vec3(0.8f, 0.8f, 0.8f);
+    light->specular = glm::vec3(0.8f, 0.8f, 0.8f);
 
 
     SDL_Event e;
@@ -165,31 +190,54 @@ int main(int argc, char const *argv[])
         ImGui::NewFrame();
 
         //TODO replace with light, mesh and curve controls
-        ImGui::ShowDemoWindow(); 
+        scenePropertiesWindow();
         ImGui::Render();
 
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+        glUniform3f(unifLocTranslation, 0.f, 0.f, 0.f);
+        glUniform1f(unifLocScale, 1.0f);
         glUniformMatrix4fv(unifLocView, 1, GL_FALSE, glm::value_ptr(camera.getView()));
         glUniformMatrix4fv(unifLocProjection, 1, GL_FALSE, glm::value_ptr(camera.getProjection()));
 
         glUniform3fv(unifLocCameraPosition, 1, glm::value_ptr(camera.getPosition()));
 
-        glUniform3fv(unifLocMaterialDiffuse, 1, glm::value_ptr(mesh.getMaterialDiffuse()));
-        glUniform3fv(unifLocMaterialSpecular, 1, glm::value_ptr(mesh.getMaterialSpecular()));
-        glUniform1f(unifLocMaterialShininess, mesh.getMaterialShininess());
 
-        glUniform3fv(unifLocLightPosition, 1, glm::value_ptr(light.position));
-        glUniform3fv(unifLocLightAmbient, 1, glm::value_ptr(light.ambient));
-        glUniform3fv(unifLocLightDiffuse, 1, glm::value_ptr(light.diffuse));
-        glUniform3fv(unifLocLightSpecular, 1, glm::value_ptr(light.specular));
+        glUniform3fv(unifLocMaterialDiffuse, 1, glm::value_ptr(curveMesh->m_diffuse));
+        glUniform3fv(unifLocMaterialSpecular, 1, glm::value_ptr(curveMesh->m_specular));
+        glUniform1f(unifLocMaterialShininess, curveMesh->m_shininess);
 
-        mesh.draw();
+        glUniform3fv(unifLocLightPosition, 1, glm::value_ptr(light->position));
+        glUniform3fv(unifLocLightAmbient, 1, glm::value_ptr(light->ambient));
+        glUniform3fv(unifLocLightDiffuse, 1, glm::value_ptr(light->diffuse));
+        glUniform3fv(unifLocLightSpecular, 1, glm::value_ptr(light->specular));
+
+        curveMesh->draw();
+
+
+        glUniform3fv(unifLocTranslation, 1, glm::value_ptr(light->position));
+        glUniform1f(unifLocScale, 0.1f);
+
+        // a little hack to make sphere have the same plain color on the whole mesh corresponding to light's attributes
+        glUniform3f(unifLocMaterialDiffuse, 1.f, 1.f, 1.f);
+        glUniform3f(unifLocMaterialSpecular, 1.f, 1.f, 1.f);
+        glUniform1f(unifLocMaterialShininess, 1.f);
+
+        glUniform3fv(unifLocLightAmbient, 1, glm::value_ptr(light->diffuse));
+        glUniform3f(unifLocLightDiffuse, 0.f, 0.f, 0.f);
+        glUniform3f(unifLocLightSpecular, 0.f, 0.f, 0.f);
+
+        lightSphere->draw();
+
 
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
         SDL_GL_SwapWindow(window);
     }
+
+    delete curveMesh; 
+    delete light;
+    delete lightSphere;
 
     ImGui_ImplOpenGL3_Shutdown();
     ImGui_ImplSDL2_Shutdown();
