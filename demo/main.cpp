@@ -23,6 +23,8 @@
 #define WIN_HEIGHT 720
 #define EDITOR_MODE_POSITION glm::vec3(0.f, 3.5f, 10.f)
 
+namespace imgui = ImGui;
+
 
 GLint unifLocTranslation;
 GLint unifLocScale;
@@ -49,8 +51,8 @@ Light light {
 
 Mesh *curveMesh;
 Material curveMaterial {
-    {0.1f, 0.5, 1.0f},
-    {0.1f, 0.5, 1.0f},
+    {0.1f, 0.9, 1.0f},
+    {0.1f, 1.f, 0.9f},
     0.01f
 };
 
@@ -74,14 +76,20 @@ std::vector<BezierCurvePoint> curvePoints {
 };
 int segmentCount = 50;
 
+
 bool isInEditorMode = false;
 int selectedCurvePoint = 0;
+bool isDragging = false;
+glm::vec4 debugWindowRect; //x, y, w, h
+SDL_Cursor *cursorHand;
+const float DRAGGING_SPEED = 0.02f;
 
 CurveMeshData curveMeshData;
 
 
 
-void handleInput(SDL_Event &event, bool &running) {
+void handleInput(SDL_Event &event, bool &running) 
+{
     if (event.type == SDL_QUIT) 
     {
         running = false;
@@ -97,22 +105,46 @@ void handleInput(SDL_Event &event, bool &running) {
                 break;
         }
     }
+    else if(event.type == SDL_MOUSEBUTTONDOWN)
+    {
+        auto x = event.button.x;
+        auto y = event.button.y;
+        if( !(x >= debugWindowRect.x && x < debugWindowRect.x + debugWindowRect.z && y >= debugWindowRect.y && y < debugWindowRect.y + debugWindowRect.w ) )
+        {
+            isDragging = true;
+        }
+    }
+    else if(event.type == SDL_MOUSEBUTTONUP)
+    {
+        isDragging = false;
+    }
+    else if(event.type == SDL_MOUSEMOTION)
+    {
+        if(isInEditorMode && isDragging)
+        {
+            curvePoints[selectedCurvePoint].position += glm::vec3(
+                (float)event.motion.xrel * DRAGGING_SPEED,
+                (float)-event.motion.yrel * DRAGGING_SPEED,
+                0.f
+            );
+        }
+    }
 }
 
 void debugWindow()
 {
-    ImGui::Begin("Debug menu", nullptr, ImGuiWindowFlags_AlwaysAutoResize);
+    imgui::Begin("Debug menu", nullptr, ImGuiWindowFlags_AlwaysAutoResize);
 
     if(isInEditorMode)
     {
-        if(ImGui::Button("Go to freeroam mode"))
+        if(imgui::Button("Go to freeroam mode"))
         {
             isInEditorMode = false;
         }
     }
     else
     {
-        if(ImGui::Button("Go to editor mode"))
+        if(imgui::Button("Go to editor mode"))
         {
             isInEditorMode = true;
             camera.setPosition(EDITOR_MODE_POSITION);
@@ -120,64 +152,84 @@ void debugWindow()
         }
     }
     
-    if(ImGui::BeginTabBar("Scene properties"))
+    if(imgui::BeginTabBar("Scene properties"))
     {
-        if(ImGui::BeginTabItem("Mesh material"))
+        if(imgui::BeginTabItem("Mesh material"))
         {
-            ImGui::ColorEdit3("Diffuse##mesh", (float *)glm::value_ptr(curveMaterial.diffuse));
-            ImGui::ColorEdit3("Specular##mesh", (float *)glm::value_ptr(curveMaterial.specular));
-            ImGui::SliderFloat("Shininess##mesh", &curveMaterial.shininess, 0.0f, 128.0f);
+            imgui::ColorEdit3("Diffuse##mesh", (float *)glm::value_ptr(curveMaterial.diffuse));
+            imgui::ColorEdit3("Specular##mesh", (float *)glm::value_ptr(curveMaterial.specular));
+            imgui::SliderFloat("Shininess##mesh", &curveMaterial.shininess, 0.0f, 128.0f);
 
-            ImGui::EndTabItem();
+            imgui::EndTabItem();
         }
         if(ImGui::BeginTabItem("Light"))
         {
-            ImGui::SliderFloat3("Position##light", (float *)glm::value_ptr(light.position), -20.0f, 20.0f);
-            ImGui::ColorEdit3("Ambient##light", (float *)glm::value_ptr(light.ambient));
-            ImGui::ColorEdit3("Diffuse##light", (float *)glm::value_ptr(light.diffuse));
-            ImGui::ColorEdit3("Specular##light", (float *)glm::value_ptr(light.specular));
+            imgui::SliderFloat3("Position##light", (float *)glm::value_ptr(light.position), -20.0f, 20.0f);
+            imgui::ColorEdit3("Ambient##light", (float *)glm::value_ptr(light.ambient));
+            imgui::ColorEdit3("Diffuse##light", (float *)glm::value_ptr(light.diffuse));
+            imgui::ColorEdit3("Specular##light", (float *)glm::value_ptr(light.specular));
             
-            ImGui::EndTabItem();
+            imgui::EndTabItem();
         }
-        if(ImGui::BeginTabItem("Curve"))
+        if(imgui::BeginTabItem("Curve"))
         {
             if(!isInEditorMode)
             {
-                ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
-                ImGui::PushStyleVar(ImGuiStyleVar_Alpha, ImGui::GetStyle().Alpha * 0.5f);
+                imgui::PushItemFlag(ImGuiItemFlags_Disabled, true);
+                imgui::PushStyleVar(ImGuiStyleVar_Alpha, ImGui::GetStyle().Alpha * 0.5f);
             }
 
-            ImGui::SliderInt("Segment count##curve", &segmentCount, 1, 200);
+            imgui::SliderInt("Segment count##curve", &segmentCount, 1, 200);
 
-            if(ImGui::Button("Point 1##curve")) {
+            imgui::Text("Point 1");
+            imgui::SameLine();
+            if(imgui::Button("Select##curve_point_select1")) {
                 selectedCurvePoint = 0;
             }
-            ImGui::SameLine();
-            if(ImGui::Button("Point 2##curve")) {
+            imgui::SameLine();
+            imgui::SliderFloat("##curve_point_ratio1", &curvePoints[0].ratio, 0.0f, 2.0f);
+            
+            imgui::Text("Point 2");
+            imgui::SameLine();
+            if(imgui::Button("Select##curve_point_select2")) {
                 selectedCurvePoint = 1;
             }
-            ImGui::SameLine();
-            if(ImGui::Button("Point 3##curve")) {
+            imgui::SameLine();
+            imgui::SliderFloat("##curve_point_ratio2", &curvePoints[1].ratio, 0.0f, 2.0f);
+
+            imgui::Text("Point 3");
+            imgui::SameLine();
+            if(imgui::Button("Select##curve_point_select3")) {
                 selectedCurvePoint = 2;
             }
-            ImGui::SameLine();
-            if(ImGui::Button("Point 4##curve")) {
+            imgui::SameLine();
+            imgui::SliderFloat("##curve_point_ratio3", &curvePoints[2].ratio, 0.0f, 2.0f);
+
+            imgui::Text("Point 4");
+            imgui::SameLine();
+            if(imgui::Button("Select##curve_point_select4")) {
                 selectedCurvePoint = 3;
             }
+            imgui::SameLine();
+            imgui::SliderFloat("##curve_point_ratio4", &curvePoints[3].ratio, 0.0f, 2.0f);
             
             if(!isInEditorMode)
             {
-                ImGui::PopItemFlag();
-                ImGui::PopStyleVar();
+                imgui::PopItemFlag();
+                imgui::PopStyleVar();
             }
             
-            ImGui::EndTabItem();
+            imgui::EndTabItem();
         }
 
-        ImGui::EndTabBar();
+        imgui::EndTabBar();
     }
 
-    ImGui::End();
+    auto pos = imgui::GetWindowPos();
+    auto size = imgui::GetWindowSize();
+    debugWindowRect = glm::vec4(pos.x, pos.y, size.x, size.y);
+
+    imgui::End();
 }
 
 void enableLighting()
@@ -220,6 +272,10 @@ void renderLightSphere()
     sphereMesh->draw();
 }
 
+
+
+
+
 int main(int argc, char const *argv[])
 {
     if(SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS) < 0)
@@ -241,9 +297,11 @@ int main(int argc, char const *argv[])
 
     SDL_GLContext context = SDL_GL_CreateContext(window);
 
-    ImGui::CreateContext();
-    ImGui::StyleColorsDark();
-    ImGuiIO& io = ImGui::GetIO(); (void)io;
+    cursorHand = SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_HAND);
+
+    imgui::CreateContext();
+    imgui::StyleColorsDark();
+    ImGuiIO& io = imgui::GetIO(); (void)io;
     ImGui_ImplSDL2_InitForOpenGL(window, context);
     ImGui_ImplOpenGL3_Init("#version 330");
 
@@ -303,6 +361,8 @@ int main(int argc, char const *argv[])
     prevTick = currTick = SDL_GetTicks();
     while(running)
     {
+        ImGui_ImplSDL2_NewFrame();
+
         currTick = SDL_GetTicks();
         float dt = (currTick - prevTick) / 1000.0f;
 
@@ -317,22 +377,28 @@ int main(int argc, char const *argv[])
 
             ImGui_ImplSDL2_ProcessEvent(&e);
         }
+
+        if(isDragging && isInEditorMode)
+        {
+            SDL_SetCursor(cursorHand);
+        }
+
         camera.update();
+
         prevTick = currTick;
         
 
+
         ImGui_ImplOpenGL3_NewFrame();
-        ImGui_ImplSDL2_NewFrame();
-        ImGui::NewFrame();
+        imgui::NewFrame();
 
         debugWindow();
         // ImGui::ShowDemoWindow();
-        ImGui::Render();
+        imgui::Render();
 
 
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
 
         glUniformMatrix4fv(unifLocView, 1, GL_FALSE, glm::value_ptr(camera.getView()));
         glUniformMatrix4fv(unifLocProjection, 1, GL_FALSE, glm::value_ptr(camera.getProjection()));
@@ -358,13 +424,13 @@ int main(int argc, char const *argv[])
             glClear(GL_DEPTH_BUFFER_BIT);
 
             Material disabledPointMat {
-                {0.8f, 0.8f, 0.f},
-                {0.8f, 0.8f, 0.f},
+                {1.f, 1.f, 0.f},
+                {1.f, 1.f, 0.f},
                 0.f
             };
             Material enabledPointMat {
-                {1.f, 1.f, 0.f},
-                {1.f, 1.f, 0.f},
+                {0.f, 1.f, 0.f},
+                {0.f, 1.f, 0.f},
                 0.f
             };
 
@@ -383,7 +449,7 @@ int main(int argc, char const *argv[])
         }
 
 
-        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+        ImGui_ImplOpenGL3_RenderDrawData(imgui::GetDrawData());
         SDL_GL_SwapWindow(window);
     }
 
@@ -392,8 +458,9 @@ int main(int argc, char const *argv[])
 
     ImGui_ImplOpenGL3_Shutdown();
     ImGui_ImplSDL2_Shutdown();
-    ImGui::DestroyContext();
+    imgui::DestroyContext();
 
+    SDL_FreeCursor(cursorHand);
     SDL_GL_DeleteContext(context);
     SDL_DestroyWindow(window);
     SDL_Quit();
