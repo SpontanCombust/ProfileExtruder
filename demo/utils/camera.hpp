@@ -29,6 +29,10 @@ public:
     void setPosition(glm::vec3 position);
     const glm::vec3& getPosition() const;
 
+    void setRotation(float yaw, float pitch);
+    float getYaw() const;
+    float getPitch() const;
+
     const glm::mat4& getView() const;
     const glm::mat4& getProjection() const;
 

@@ -11,6 +11,7 @@
 #include <bezier_curve.hpp>
 #include <curve_mesh.hpp>
 #include <imgui.h>
+#include <imgui_internal.h>
 #include <imgui_impl_sdl.h>
 #include <imgui_impl_opengl3.h>
 
@@ -20,6 +21,7 @@
 
 #define WIN_WIDTH 1280
 #define WIN_HEIGHT 720
+#define EDITOR_MODE_POSITION glm::vec3(0.f, 3.5f, 10.f)
 
 
 GLint unifLocTranslation;
@@ -54,6 +56,8 @@ Material curveMaterial {
 
 Mesh *sphereMesh;
 
+Camera camera;
+
 
 
 std::vector<glm::vec2> profile {
@@ -62,15 +66,18 @@ std::vector<glm::vec2> profile {
     glm::vec2(0.f, -0.4f),
     glm::vec2(-0.2f, 0.f),
 };
-
 std::vector<BezierCurvePoint> curvePoints {
     {{-5.f, 0.f, 0.f}, 0.3f},
     {{-2.f, 7.f, -1.f}, 1.f},
     {{5.f, 0.f, -2.f}, 1.f},
     {{2.f, 7.f, -3.f}, 0.1f},
 };
+int segmentCount = 50;
 
-int segmentCount = 100;
+bool isInEditorMode = false;
+int selectedCurvePoint = 0;
+
+CurveMeshData curveMeshData;
 
 
 
@@ -92,10 +99,27 @@ void handleInput(SDL_Event &event, bool &running) {
     }
 }
 
-void scenePropertiesWindow()
+void debugWindow()
 {
     ImGui::Begin("Debug menu", nullptr, ImGuiWindowFlags_AlwaysAutoResize);
 
+    if(isInEditorMode)
+    {
+        if(ImGui::Button("Go to freeroam mode"))
+        {
+            isInEditorMode = false;
+        }
+    }
+    else
+    {
+        if(ImGui::Button("Go to editor mode"))
+        {
+            isInEditorMode = true;
+            camera.setPosition(EDITOR_MODE_POSITION);
+            camera.setRotation(-90.f, 0.f);
+        }
+    }
+    
     if(ImGui::BeginTabBar("Scene properties"))
     {
         if(ImGui::BeginTabItem("Mesh material"))
@@ -117,7 +141,35 @@ void scenePropertiesWindow()
         }
         if(ImGui::BeginTabItem("Curve"))
         {
+            if(!isInEditorMode)
+            {
+                ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
+                ImGui::PushStyleVar(ImGuiStyleVar_Alpha, ImGui::GetStyle().Alpha * 0.5f);
+            }
+
             ImGui::SliderInt("Segment count##curve", &segmentCount, 1, 200);
+
+            if(ImGui::Button("Point 1##curve")) {
+                selectedCurvePoint = 0;
+            }
+            ImGui::SameLine();
+            if(ImGui::Button("Point 2##curve")) {
+                selectedCurvePoint = 1;
+            }
+            ImGui::SameLine();
+            if(ImGui::Button("Point 3##curve")) {
+                selectedCurvePoint = 2;
+            }
+            ImGui::SameLine();
+            if(ImGui::Button("Point 4##curve")) {
+                selectedCurvePoint = 3;
+            }
+            
+            if(!isInEditorMode)
+            {
+                ImGui::PopItemFlag();
+                ImGui::PopStyleVar();
+            }
             
             ImGui::EndTabItem();
         }
@@ -128,12 +180,22 @@ void scenePropertiesWindow()
     ImGui::End();
 }
 
-void setLightProperties()
+void enableLighting()
 {
     glUniform3fv(unifLocLightPosition, 1, glm::value_ptr(light.position));
     glUniform3fv(unifLocLightAmbient, 1, glm::value_ptr(light.ambient));
     glUniform3fv(unifLocLightDiffuse, 1, glm::value_ptr(light.diffuse));
     glUniform3fv(unifLocLightSpecular, 1, glm::value_ptr(light.specular));
+}
+
+void disableLighting()
+{
+    // this way it will always be independent from light's position
+    // will apply the same color everywhere on the mesh
+    // and will only use mesh's diffuse color
+    glUniform3f(unifLocLightAmbient, 1.f, 1.f, 1.f);
+    glUniform3f(unifLocLightDiffuse, 0.f, 0.f, 0.f);
+    glUniform3f(unifLocLightSpecular, 0.f, 0.f, 0.f);
 }
 
 void renderMesh(const Mesh* mesh, const Material& material, glm::vec3 translation = glm::vec3(0.f), float scale = 1.f)
@@ -153,14 +215,7 @@ void renderLightSphere()
     glUniform3fv(unifLocTranslation, 1, glm::value_ptr(light.position));
     glUniform1f(unifLocScale, 0.05f);
 
-    // a little hack to make sphere have the same plain color on the whole mesh corresponding to light's attributes
-    glUniform3f(unifLocMaterialDiffuse, 1.f, 1.f, 1.f);
-    glUniform3f(unifLocMaterialSpecular, 1.f, 1.f, 1.f);
-    glUniform1f(unifLocMaterialShininess, 1.f);
-
-    glUniform3fv(unifLocLightAmbient, 1, glm::value_ptr(light.diffuse));
-    glUniform3f(unifLocLightDiffuse, 0.f, 0.f, 0.f);
-    glUniform3f(unifLocLightSpecular, 0.f, 0.f, 0.f);
+    glUniform3fv(unifLocMaterialDiffuse, 1, glm::value_ptr(light.diffuse));
 
     sphereMesh->draw();
 }
@@ -230,13 +285,16 @@ int main(int argc, char const *argv[])
     unifLocLightDiffuse = glGetUniformLocation(shader, "uLight.diffuse");
     unifLocLightSpecular = glGetUniformLocation(shader, "uLight.specular");
 
-    
-    Camera camera;
+
     curveMesh = new Mesh();
     sphereMesh = new Mesh();
     sphereMesh->load("data/sphere.obj");
 
+
     camera.setPosition(glm::vec3(0.f, 3.5f, 10.f));
+
+    curveMeshData = extrudeProfileWithCurve(profile, curvePoints, segmentCount);
+    curveMesh->load(curveMeshData.vertices, curveMeshData.normals, curveMeshData.indices);
 
 
     SDL_Event e;
@@ -251,7 +309,12 @@ int main(int argc, char const *argv[])
         while(SDL_PollEvent(&e))
         {
             handleInput(e, running);
-            camera.handleEvent(e, dt);
+
+            if(!isInEditorMode)
+            {
+                camera.handleEvent(e, dt);
+            }
+
             ImGui_ImplSDL2_ProcessEvent(&e);
         }
         camera.update();
@@ -262,7 +325,7 @@ int main(int argc, char const *argv[])
         ImGui_ImplSDL2_NewFrame();
         ImGui::NewFrame();
 
-        scenePropertiesWindow();
+        debugWindow();
         // ImGui::ShowDemoWindow();
         ImGui::Render();
 
@@ -275,13 +338,49 @@ int main(int argc, char const *argv[])
         glUniformMatrix4fv(unifLocProjection, 1, GL_FALSE, glm::value_ptr(camera.getProjection()));
         glUniform3fv(unifLocCameraPosition, 1, glm::value_ptr(camera.getPosition()));
 
-        setLightProperties();
+        enableLighting();
 
-        CurveMeshData curveMeshData = extrudeProfileWithCurve(profile, curvePoints, segmentCount);
-        curveMesh->load(curveMeshData.vertices, curveMeshData.normals, curveMeshData.indices);
+        if(isInEditorMode)
+        {
+            curveMeshData = extrudeProfileWithCurve(profile, curvePoints, segmentCount);
+            curveMesh->load(curveMeshData.vertices, curveMeshData.normals, curveMeshData.indices);
+        }
+
         renderMesh(curveMesh, curveMaterial);
 
+        disableLighting();
+        
         renderLightSphere();
+
+        if(isInEditorMode)
+        {
+            // so that points are visible no matter what
+            glClear(GL_DEPTH_BUFFER_BIT);
+
+            Material disabledPointMat {
+                {0.8f, 0.8f, 0.f},
+                {0.8f, 0.8f, 0.f},
+                0.f
+            };
+            Material enabledPointMat {
+                {1.f, 1.f, 0.f},
+                {1.f, 1.f, 0.f},
+                0.f
+            };
+
+            for (int i = 0; i < curvePoints.size(); i++)
+            {
+                if(i == selectedCurvePoint)
+                {
+                    renderMesh(sphereMesh, enabledPointMat, curvePoints[i].position, 0.05f);
+                }
+                else
+                {
+                    renderMesh(sphereMesh, disabledPointMat, curvePoints[i].position, 0.05f);
+                }
+                
+            }
+        }
 
 
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());

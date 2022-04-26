@@ -92,6 +92,22 @@ const glm::vec3& Camera::getPosition() const
     return m_position;
 }
 
+void Camera::setRotation(float yaw, float pitch)
+{
+    m_yaw = yaw;
+    m_pitch = pitch;
+}
+
+float Camera::getYaw() const
+{
+    return m_yaw;
+}
+
+float Camera::getPitch() const
+{
+    return m_pitch;
+}
+
 const glm::mat4& Camera::getView() const
 {
     return m_view;
