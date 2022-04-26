@@ -53,7 +53,7 @@ Mesh *curveMesh;
 Material curveMaterial {
     {0.1f, 0.9, 1.0f},
     {0.1f, 1.f, 0.9f},
-    0.01f
+    32.f
 };
 
 Mesh *sphereMesh;
@@ -63,10 +63,14 @@ Camera camera;
 
 
 std::vector<glm::vec2> profile {
-    glm::vec2(0.f, 0.4f),
-    glm::vec2(0.2f, 0.f),
-    glm::vec2(0.f, -0.4f),
-    glm::vec2(-0.2f, 0.f),
+    glm::vec2(0.0f, 0.05f),
+    glm::vec2(-0.05f, 0.15f),
+    glm::vec2(-0.15f, 0.15f),
+    glm::vec2(-0.20f, 0.05f),
+    glm::vec2(0.00f, -0.15f),
+    glm::vec2(0.20f, 0.05f),
+    glm::vec2(0.15f, 0.15f),
+    glm::vec2(0.05f, 0.15f),
 };
 std::vector<BezierCurvePoint> curvePoints {
     {{-5.f, 0.f, 0.f}, 0.3f},
