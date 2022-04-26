@@ -102,7 +102,7 @@ void Mesh::load(const char *objPath)
     load(vertices, normals, loader.LoadedIndices);
 }
 
-void Mesh::draw()
+void Mesh::draw() const
 {
     glBindVertexArray(m_vao);
         glDrawElements(GL_TRIANGLES, m_iboSize, GL_UNSIGNED_INT, nullptr);

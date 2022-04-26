@@ -44,22 +44,22 @@ find_package(GLEW REQUIRED)
 
 add_library(imgui)
 target_include_directories(imgui PUBLIC
-    "${imgui_SOURCE_DIR}"
-    "${imgui_SOURCE_DIR}/backends"
+    ${imgui_SOURCE_DIR}
+    ${imgui_SOURCE_DIR}/backends
 )
 target_sources(imgui PRIVATE
-    "${imgui_SOURCE_DIR}/imconfig.h"
-    "${imgui_SOURCE_DIR}/imgui.h"
-    "${imgui_SOURCE_DIR}/imgui.cpp"
-    "${imgui_SOURCE_DIR}/imgui_demo.cpp"
-    "${imgui_SOURCE_DIR}/imgui_draw.cpp"
-    "${imgui_SOURCE_DIR}/imgui_internal.h"
-    "${imgui_SOURCE_DIR}/imgui_tables.cpp"
-    "${imgui_SOURCE_DIR}/imgui_widgets.cpp"
-    "${imgui_SOURCE_DIR}/backends/imgui_impl_sdl.h"
-    "${imgui_SOURCE_DIR}/backends/imgui_impl_sdl.cpp"
-    "${imgui_SOURCE_DIR}/backends/imgui_impl_opengl3.h"
-    "${imgui_SOURCE_DIR}/backends/imgui_impl_opengl3.cpp"
+    ${imgui_SOURCE_DIR}/imconfig.h
+    ${imgui_SOURCE_DIR}/imgui.h
+    ${imgui_SOURCE_DIR}/imgui.cpp
+    ${imgui_SOURCE_DIR}/imgui_demo.cpp
+    ${imgui_SOURCE_DIR}/imgui_draw.cpp
+    ${imgui_SOURCE_DIR}/imgui_internal.h
+    ${imgui_SOURCE_DIR}/imgui_tables.cpp
+    ${imgui_SOURCE_DIR}/imgui_widgets.cpp
+    ${imgui_SOURCE_DIR}/backends/imgui_impl_sdl.h
+    ${imgui_SOURCE_DIR}/backends/imgui_impl_sdl.cpp
+    ${imgui_SOURCE_DIR}/backends/imgui_impl_opengl3.h
+    ${imgui_SOURCE_DIR}/backends/imgui_impl_opengl3.cpp
 )
 target_link_libraries(imgui PRIVATE 
     SDL2
@@ -69,10 +69,10 @@ target_link_libraries(imgui PRIVATE
 
 add_library(objloader INTERFACE)
 target_include_directories(objloader INTERFACE
-    "${objloader_SOURCE_DIR}/Source"
+    ${objloader_SOURCE_DIR}/Source
 )
 target_sources(objloader INTERFACE
-    "${objloader_SOURCE_DIR}/Source/OBJ_Loader.h"
+    ${objloader_SOURCE_DIR}/Source/OBJ_Loader.h
 )
 
 # ============================ LIBRARY ============================
@@ -96,6 +96,7 @@ target_sources(ProfileExtruderDemo PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/demo/utils/camera.hpp
     ${CMAKE_CURRENT_SOURCE_DIR}/demo/utils/camera.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/demo/utils/light.hpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/demo/utils/material.hpp
     ${CMAKE_CURRENT_SOURCE_DIR}/demo/utils/mesh.hpp
     ${CMAKE_CURRENT_SOURCE_DIR}/demo/utils/mesh.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/demo/utils/shader_program.hpp

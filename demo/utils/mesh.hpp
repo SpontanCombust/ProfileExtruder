@@ -18,11 +18,6 @@ private:
     size_t m_iboSize;
     size_t m_iboCapacity;
 
-public:
-    glm::vec3 m_diffuse;
-    glm::vec3 m_specular;
-    float m_shininess;
-
 
 public:
     Mesh();
@@ -35,5 +30,5 @@ public:
 
     void load(const char *objPath);
 
-    void draw();
+    void draw() const;
 };
