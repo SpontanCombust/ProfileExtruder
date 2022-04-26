@@ -268,7 +268,7 @@ int main(int argc, char const *argv[])
     SDL_GL_SetSwapInterval(1);
 
 
-    GLuint shader = loadShaderProgramFromFiles("data/shader.vs.glsl", "data/shader.fs.glsl");
+    GLuint shader = loadShaderProgramFromFiles("data/phong.vs.glsl", "data/phong.fs.glsl");
     glUseProgram(shader);
 
     unifLocTranslation = glGetUniformLocation(shader, "uTranslation");
