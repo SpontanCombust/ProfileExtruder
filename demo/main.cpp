@@ -43,20 +43,35 @@ Mesh *curveMesh;
 
 void scenePropertiesWindow()
 {
-    ImGui::Begin("Scene Properties");
+    ImGui::Begin("Debug menu", nullptr, ImGuiWindowFlags_AlwaysAutoResize);
 
-    ImGui::Text("Mesh material");
-    ImGui::ColorEdit3("Diffuse##mesh", (float *)glm::value_ptr(curveMesh->m_diffuse));
-    ImGui::ColorEdit3("Specular##mesh", (float *)glm::value_ptr(curveMesh->m_specular));
-    ImGui::SliderFloat("Shininess##mesh", &curveMesh->m_shininess, 0.0f, 128.0f);
+    if(ImGui::BeginTabBar("Scene properties"))
+    {
+        if(ImGui::BeginTabItem("Mesh material"))
+        {
+            ImGui::ColorEdit3("Diffuse##mesh", (float *)glm::value_ptr(curveMesh->m_diffuse));
+            ImGui::ColorEdit3("Specular##mesh", (float *)glm::value_ptr(curveMesh->m_specular));
+            ImGui::SliderFloat("Shininess##mesh", &curveMesh->m_shininess, 0.0f, 128.0f);
 
-    ImGui::NewLine();
+            ImGui::EndTabItem();
+        }
+        if(ImGui::BeginTabItem("Light"))
+        {
+            ImGui::SliderFloat3("Position##light", (float *)glm::value_ptr(light->position), -20.0f, 20.0f);
+            ImGui::ColorEdit3("Ambient##light", (float *)glm::value_ptr(light->ambient));
+            ImGui::ColorEdit3("Diffuse##light", (float *)glm::value_ptr(light->diffuse));
+            ImGui::ColorEdit3("Specular##light", (float *)glm::value_ptr(light->specular));
+            
+            ImGui::EndTabItem();
+        }
+        if(ImGui::BeginTabItem("Curve"))
+        {
 
-    ImGui::Text("Light");
-    ImGui::SliderFloat3("Position##light", (float *)glm::value_ptr(light->position), -20.0f, 20.0f);
-    ImGui::ColorEdit3("Ambient##light", (float *)glm::value_ptr(light->ambient));
-    ImGui::ColorEdit3("Diffuse##light", (float *)glm::value_ptr(light->diffuse));
-    ImGui::ColorEdit3("Specular##light", (float *)glm::value_ptr(light->specular));
+            ImGui::EndTabItem();
+        }
+
+        ImGui::EndTabBar();
+    }
 
     ImGui::End();
 }
@@ -189,8 +204,8 @@ int main(int argc, char const *argv[])
         ImGui_ImplSDL2_NewFrame();
         ImGui::NewFrame();
 
-        //TODO replace with light, mesh and curve controls
         scenePropertiesWindow();
+        // ImGui::ShowDemoWindow();
         ImGui::Render();
 
 
