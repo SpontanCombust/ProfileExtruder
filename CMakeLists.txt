@@ -35,6 +35,9 @@ include(fetchcontent-offline)
 FetchContent_DisconnectedIfOffline()
 
 
+set(FETCHCONTENT_UPDATES_DISCONNECTED_SDL2 ON)
+
+
 if(UNIX)
     set(OpenGL_GL_PREFERENCE GLVND)
 endif()
