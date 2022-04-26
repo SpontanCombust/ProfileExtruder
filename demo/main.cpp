@@ -55,6 +55,25 @@ Material curveMaterial {
 Mesh *sphereMesh;
 
 
+
+std::vector<glm::vec2> profile {
+    glm::vec2(0.f, 0.4f),
+    glm::vec2(0.2f, 0.f),
+    glm::vec2(0.f, -0.4f),
+    glm::vec2(-0.2f, 0.f),
+};
+
+std::vector<BezierCurvePoint> curvePoints {
+    {{-5.f, 0.f, 0.f}, 0.3f},
+    {{-2.f, 7.f, -1.f}, 1.f},
+    {{5.f, 0.f, -2.f}, 1.f},
+    {{2.f, 7.f, -3.f}, 0.1f},
+};
+
+int segmentCount = 100;
+
+
+
 void handleInput(SDL_Event &event, bool &running) {
     if (event.type == SDL_QUIT) 
     {
@@ -98,7 +117,8 @@ void scenePropertiesWindow()
         }
         if(ImGui::BeginTabItem("Curve"))
         {
-
+            ImGui::SliderInt("Segment count##curve", &segmentCount, 1, 200);
+            
             ImGui::EndTabItem();
         }
 
@@ -216,29 +236,8 @@ int main(int argc, char const *argv[])
     sphereMesh = new Mesh();
     sphereMesh->load("data/sphere.obj");
 
-
-    std::vector<glm::vec2> profile {
-        glm::vec2(0.f, 0.4f),
-        glm::vec2(0.2f, 0.f),
-        glm::vec2(0.f, -0.4f),
-        glm::vec2(-0.2f, 0.f),
-    };
-
-    std::vector<BezierCurvePoint> curvePoints {
-        {{-5.f, 0.f, 0.f}, 0.3f},
-        {{-2.f, 7.f, -1.f}, 1.f},
-        {{5.f, 0.f, -2.f}, 1.f},
-        {{2.f, 7.f, -3.f}, 0.1f},
-    };
-
-    unsigned int segmentCount = 100;
-
-
     camera.setPosition(glm::vec3(0.f, 3.5f, 10.f));
 
-    // this will later reload every time change is made to the curve
-    CurveMeshData curveMeshData = extrudeProfileWithCurve(profile, curvePoints, segmentCount);
-    curveMesh->load(curveMeshData.vertices, curveMeshData.normals, curveMeshData.indices);
 
     SDL_Event e;
     bool running = true;
@@ -277,8 +276,11 @@ int main(int argc, char const *argv[])
         glUniform3fv(unifLocCameraPosition, 1, glm::value_ptr(camera.getPosition()));
 
         setLightProperties();
+
+        CurveMeshData curveMeshData = extrudeProfileWithCurve(profile, curvePoints, segmentCount);
+        curveMesh->load(curveMeshData.vertices, curveMeshData.normals, curveMeshData.indices);
         renderMesh(curveMesh, curveMaterial);
-        
+
         renderLightSphere();
 
 

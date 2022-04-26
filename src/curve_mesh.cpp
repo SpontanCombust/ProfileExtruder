@@ -171,14 +171,12 @@ CurveMeshData extrudeProfile(std::vector<glm::vec2> profile, const std::vector<E
 // All elements besides the first and last in curvePoints are treated as control points
 CurveMeshData extrudeProfileWithCurve(const std::vector<glm::vec2>& profile, const std::vector<BezierCurvePoint>& curvePoints, unsigned int segmentCount)
 {
-    CurveMeshData mesh{};
-
     auto curve = plotBezierCurve(curvePoints, segmentCount);
 
     if(curve.size() < 2)
     {
         printf("[ERROR][%s(%d)] Not enough points to plot a curve", __FILE__, __LINE__);
-        return mesh;
+        return CurveMeshData{};
     }
 
     std::vector<ExtrusionPoint> extrusionPoints(curve.size());
