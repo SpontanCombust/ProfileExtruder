@@ -23,7 +23,9 @@ struct ExtrusionPoint
     float roll;
 };
 
+// profile vertices should be given in a counter-clockwise order around a (0,0) origin to avoid inverted normals
 CurveMeshData extrudeProfile(std::vector<glm::vec2> profile, const std::vector<ExtrusionPoint>& extrusionPoints);
 
 // All elements besides the first and last in curvePoints are treated as control points
+// profile vertices should be given in a counter-clockwise order around a (0,0) origin to avoid inverted normals
 CurveMeshData extrudeProfileWithCurve(const std::vector<glm::vec2>& profile, const std::vector<BezierCurvePoint>& curvePoints, unsigned int segmentCount);

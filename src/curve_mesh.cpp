@@ -7,7 +7,7 @@
 #include <cstdio>
 
 
-const glm::vec3 INIT_PROFILE_FORWARD_VECTOR = glm::vec3(0.f, 1.f, 0.f);
+const glm::vec3 PROFILE_NORMAL = glm::vec3(0.f, 0.f, 1.f);
 
 CurveMeshData extrudeProfile(std::vector<glm::vec2> profile, const std::vector<ExtrusionPoint>& extrusionPoints)
 {
@@ -32,26 +32,26 @@ CurveMeshData extrudeProfile(std::vector<glm::vec2> profile, const std::vector<E
     {
         glm::vec3 direction = glm::normalize(ep.direction);
         // the angle of rotation of the direction vector
-        float directionAngleDelta = std::acos(glm::dot(INIT_PROFILE_FORWARD_VECTOR, direction));
+        float rotationAngle = std::acos(glm::dot(PROFILE_NORMAL, direction));
         // the vector around which said direction vector is rotated
-        glm::vec3 directionRotationVec;
+        glm::vec3 rotationNormal;
         // avoid calculating with NaN value
-        if(direction == INIT_PROFILE_FORWARD_VECTOR || direction == -INIT_PROFILE_FORWARD_VECTOR)
+        if(direction == PROFILE_NORMAL || direction == -PROFILE_NORMAL)
         {
-            directionRotationVec = {0.f, 0.f, 1.f};
+            rotationNormal = {1.f, 0.f, 0.f};
         }
         else
         {
-            directionRotationVec = glm::cross(INIT_PROFILE_FORWARD_VECTOR, direction);
+            rotationNormal = glm::cross(PROFILE_NORMAL, direction);
         }
         
         for (size_t j = 0; j < profileSize - 1; j++)
         {
             // initialize the vertex with profile coords
-            glm::vec3 vert = {profile[j].x, 0.f, profile[j].y};
+            glm::vec3 vert = {profile[j].x, profile[j].y, 0.f};
             
             // rotate the vertex by the angle the direction vector makes with base vector of the profile
-            vert = glm::rotate(vert, directionAngleDelta, directionRotationVec);
+            vert = glm::rotate(vert, rotationAngle, rotationNormal);
             // now rotate the vertex by the roll angle
             vert = glm::rotate(vert, ep.roll, direction);
             // move vertex to the position
@@ -80,7 +80,6 @@ CurveMeshData extrudeProfile(std::vector<glm::vec2> profile, const std::vector<E
 
 
     // ============= NORMALS ============= //
-    //FIXME: normals are not correct
     // calculate normal based on the faces of the next curve mesh segment
     auto calcNormalAfter = [&](int i, int j) -> glm::vec3 {
         glm::vec3 vThis = mesh.vertices[i * profileSize + j];
