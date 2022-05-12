@@ -4,9 +4,9 @@
 #include "utils/light.hpp"
 #include "utils/material.hpp"
 
-#include <SDL2/SDL.h>
+#include <SDL.h>
 #include <GL/glew.h>
-#include <SDL2/SDL_opengl.h>
+#include <SDL_opengl.h>
 #include <glm/gtc/type_ptr.hpp>
 #include <bezier_curve.hpp>
 #include <curve_mesh.hpp>
