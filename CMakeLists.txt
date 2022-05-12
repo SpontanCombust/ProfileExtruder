@@ -89,7 +89,7 @@ target_sources(ProfileExtruder PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/include/curve_mesh.hpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/curve_mesh.cpp
 )
-target_link_libraries(ProfileExtruder PRIVATE
+target_link_libraries(ProfileExtruder PUBLIC
     glm
 )
 
