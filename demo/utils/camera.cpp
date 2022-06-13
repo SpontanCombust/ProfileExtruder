@@ -20,6 +20,9 @@ Camera::Camera()
     m_projection = glm::perspective(glm::radians(CAMERA_FOV), CAMERA_ASPECT_RATIO, 0.1f, 100.0f);
 
     m_isRotationActive = false;
+
+    m_motionForward = 0.f;
+    m_motionRight = 0.f;
 }
 
 Camera::~Camera()
@@ -47,16 +50,30 @@ void Camera::handleEvent(SDL_Event& event, float deltaTime)
         switch(event.key.keysym.sym)
         {
         case SDLK_w:
-            m_position += m_forward * deltaTime * CAMERA_MOVE_SPEED;
+            m_motionForward = 1.f;
             break;
         case SDLK_s:
-            m_position -= m_forward * deltaTime * CAMERA_MOVE_SPEED;
+            m_motionForward = -1.f;
             break;
         case SDLK_a:
-            m_position -= m_right * deltaTime * CAMERA_MOVE_SPEED;
+            m_motionRight = -1.f;
             break;
         case SDLK_d:
-            m_position += m_right * deltaTime * CAMERA_MOVE_SPEED;
+            m_motionRight = 1.f;
+            break;
+        }
+    }
+    else if(event.type == SDL_KEYUP)
+    {
+        switch(event.key.keysym.sym)
+        {
+        case SDLK_w:
+        case SDLK_s:
+            m_motionForward = 0.f;
+            break;
+        case SDLK_a:
+        case SDLK_d:
+            m_motionRight = 0.f;
             break;
         }
     }
@@ -77,8 +94,11 @@ void Camera::handleEvent(SDL_Event& event, float deltaTime)
     }
 }
 
-void Camera::update()
+void Camera::update(float dt)
 {
+    m_position += m_motionForward * m_forward * dt * CAMERA_MOVE_SPEED;
+    m_position += m_motionRight * m_right * dt * CAMERA_MOVE_SPEED;
+
     updateViewUsingRotation();
 }
 

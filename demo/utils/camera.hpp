@@ -18,13 +18,16 @@ private:
 
     bool m_isRotationActive;
 
+    float m_motionForward;
+    float m_motionRight;
+
 
 public:
     Camera();
     ~Camera();
 
     void handleEvent(SDL_Event& event, float deltaTime);
-    void update();
+    void update(float dt);
 
     void setPosition(glm::vec3 position);
     const glm::vec3& getPosition() const;

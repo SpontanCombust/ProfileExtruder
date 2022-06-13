@@ -387,7 +387,7 @@ int main(int argc, char const *argv[])
             SDL_SetCursor(cursorHand);
         }
 
-        camera.update();
+        camera.update(dt);
 
         prevTick = currTick;
         
