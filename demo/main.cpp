@@ -139,6 +139,11 @@ void debugWindow()
 {
     imgui::Begin("Debug menu", nullptr, ImGuiWindowFlags_AlwaysAutoResize);
 
+    imgui::Text("W/A/S/D - movement");
+    imgui::Text("Move Mouse - rotate camera");
+    imgui::Text("Mouse Right - enable/disable camera rotation");
+    imgui::NewLine();
+
     if(isInEditorMode)
     {
         if(imgui::Button("Go to freeroam mode"))
